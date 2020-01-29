@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import pysparnn.cluster_index as ci
 import re
+import sys
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
@@ -64,25 +65,21 @@ class TasksIndex():
         return tasks
     
 
-# example
-tasks_path = 'data/photo_youdo.json'
-df = pd.read_json(tasks_path, lines=True)
-df.rename(columns={'body': 'text'}, inplace=True)
-df['normalized'] = df['text'].apply(lambda x: pre_process(x))
-
-index = TasksIndex(df)
-print('Hi, do you want to complete some tasks?')
-print()
-while True:
-    message = input()
-    print()
+if __name__ == "__main__":
+    message = sys.argv[1]
+    
+    tasks_path = 'data/photo_youdo.json'
+    df = pd.read_json(tasks_path, lines=True)
+    df.rename(columns={'body': 'text'}, inplace=True)
+    df['normalized'] = df['text'].apply(lambda x: pre_process(x))
+    
+    index = TasksIndex(df)
     tasks = index.get_similar_tasks(message)
     if len(tasks) == 0:
-        print('Hm... seems there are no relevant tasks right now, maybe try something else?\n')
+        print('Hm... seems there are no relevant tasks right now, maybe try something else?')
     else:
         print('Maybe you are interested in these suggestions:')
         print()
         for t in tasks: 
             print('- ' + t)
             print()
-        print('Would you like other tasks as well?')
