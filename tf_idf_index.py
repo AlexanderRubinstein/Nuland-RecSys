@@ -70,6 +70,7 @@ if __name__ == "__main__":
     
     tasks_path = 'data/photo_youdo.json'
     df = pd.read_json(tasks_path, lines=True)
+    df.drop_duplicates(inplace=True)
     df.rename(columns={'body': 'text'}, inplace=True)
     df['normalized'] = df['text'].apply(lambda x: pre_process(x))
     
