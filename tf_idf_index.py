@@ -1,6 +1,8 @@
+import argparse
 import nltk
 import numpy as np
 import pandas as pd
+import pickle
 import pysparnn.cluster_index as ci
 import re
 import sys
@@ -10,8 +12,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
 
-nltk.download('wordnet')
-nltk.download('punkt')
+nltk.download('wordnet', quiet=True)
+nltk.download('punkt', quiet=True)
 word_net_lemmatizer = WordNetLemmatizer()
 
 def pre_process(text):
@@ -39,7 +41,7 @@ class TasksIndex():
         self.df = df
         self.threshold = threshold
         
-        nltk.download('stopwords')
+        nltk.download('stopwords', quiet=True)
         stop_words = set(stopwords.words('english'))
         
         self.cv = CountVectorizer(max_df=0.85, stop_words=stop_words, max_features=10000)
@@ -63,19 +65,29 @@ class TasksIndex():
         tasks = self.df.iloc[tasks]['text'].tolist()
         
         return tasks
-    
 
-if __name__ == "__main__":
-    message = sys.argv[1]
-    
-    tasks_path = 'data/photo_youdo.json'
+
+def create_index(tasks_path):
     df = pd.read_json(tasks_path, lines=True)
     df.drop_duplicates(inplace=True)
     df.rename(columns={'body': 'text'}, inplace=True)
     df['normalized'] = df['text'].apply(lambda x: pre_process(x))
     
     index = TasksIndex(df)
+    return index
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Suggestion for actions.')
+    parser.add_argument('message', type=str, help='message to actions')
+    parser.add_argument('--db_path', type=str, default='data/photo_youdo.json',
+                        help='path to database of jsons')
+    args = parser.parse_args()
+    
+    message = args.message
+    db_path = args.db_path
+    index = create_index(db_path)
     tasks = index.get_similar_tasks(message)
+    
     if len(tasks) == 0:
         print('Hm... seems there are no relevant tasks right now, maybe try something else?')
     else:
